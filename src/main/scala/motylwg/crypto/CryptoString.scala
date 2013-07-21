@@ -4,28 +4,29 @@ import java.math.BigInteger
 import scala.BigInt
 import java.security.MessageDigest
 
-case class CryptoString(val bytes: Array[Byte]) {
+case class CryptoString(bytes: List[Byte]) {
 
-  def toBytes() = bytes
+  lazy val buf = bytes.toArray
 
-  def length() = bytes.length
+  def toBytes = bytes
 
-  lazy val bigint = new BigInteger(bytes)
+  def size = bytes.size
+
+  lazy val bigint = new BigInteger(buf)
 
   def inc = {
-    new CryptoString((bigint.add(BigInteger.ONE)).toByteArray)
+    new CryptoString(bigint.add(BigInteger.ONE).toByteArray.toList)
   }
 
   def ^ (that: CryptoString) = {
-    val pairs = bytes.zip(that.toBytes())
+    val pairs = bytes.zip(that.toBytes)
     val xored = pairs.map {p => (p._1 ^ p._2).toByte}
 
-    new CryptoString(xored.toList.toArray)
+    new CryptoString(xored.toList)
   }
 
   def + (that: CryptoString) = {
-    val pairs = bytes.zip(that.toBytes())
-    val xored = pairs.map {p => (p._1 ^ p._2).toByte}
+    val pairs = bytes.zip(that.toBytes)
 
     CryptoString.fromHex(this.toString() + that.toString())
   }
@@ -42,11 +43,11 @@ case class CryptoString(val bytes: Array[Byte]) {
     blocks.toArray
   }
 
-  def pad() = {
+  def pad(blockSize: Int = 16) = {
     val list = bytes.toList
-    val npad = 16 - list.length % 16
+    val npad = blockSize - list.length % blockSize
     val padded = list ++ (1 to npad).map {_ => npad.toByte}
-    new CryptoString(padded.toArray)
+    new CryptoString(padded.toList)
   }
 
   private def byteToHex(b: Byte) : String = {
@@ -55,16 +56,16 @@ case class CryptoString(val bytes: Array[Byte]) {
     if (s.length == 1) "0" + s else s
   }
 
-  def toHex() = {
+  def toHex = {
     val strings = bytes.map {b => byteToHex(b)}
     strings.mkString
   }
 
   def sha256() = {
-    new CryptoString(CryptoString.md.digest(bytes))
+    new CryptoString(CryptoString.sha256.digest(buf).toList)
   }
 
-  override def toString() = {
+  override def toString = {
     val chars = bytes.map {b => b.toChar}
     chars.mkString
   }
@@ -75,7 +76,7 @@ object CryptoString {
   def apply(s: String)  = {
     val bytes = for (c <- s) yield c.toByte
 
-    new CryptoString(bytes.toArray)
+    new CryptoString(bytes.toList)
   }
 
   def fromHex(s: String) = {
@@ -86,8 +87,8 @@ object CryptoString {
       byte = s.substring(2 * i , 2 * i + 2)
     } yield Integer.valueOf(byte, 16).toByte
 
-    new CryptoString(bytes.toArray)
+    new CryptoString(bytes.toList)
   }
 
-  def md = MessageDigest.getInstance("SHA-256")
+  def sha256 = MessageDigest.getInstance("SHA-256")
 }

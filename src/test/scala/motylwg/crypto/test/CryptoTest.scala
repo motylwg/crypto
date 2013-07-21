@@ -19,12 +19,18 @@ class CryptoTest extends FunSuite {
   test("toHex inverts fromHex") {
     val s = "414243abcd"
     val cs = CryptoString.fromHex(s)
-    assert(cs.toHex() === s)
+    assert(cs.toHex === s)
   }
 
   test("fromHex") {
     val s = CryptoString.fromHex("616263")
     assert(s.toString === "abc")
+  }
+
+  test("inc") {
+    val s = CryptoString("Abc")
+    val sInc = CryptoString("Abd")
+    assert (s.inc === sInc)
   }
 
 
