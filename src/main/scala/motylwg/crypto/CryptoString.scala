@@ -29,38 +29,35 @@ case class CryptoString(bytes: List[Byte]) {
     CryptoString(this.toString() + that.toString())
   }
 
-  def toBlocks(blockSize: Int = 16): Array[CryptoString] = {
-    val n = (bytes.length - 1) / blockSize + 1
-    val lastn = bytes.length % blockSize
-    val hex = toString()
+  def sha256() = {
+    new CryptoString(CryptoString.sha256.digest(buf).toList)
+  }
 
-    val blocks = for (i <- 0 until n) yield
-      if (i < n - 1) CryptoString(hex.substring(2 * blockSize * i, 2 * blockSize * (i + 1)))
-      else CryptoString(hex.substring(2 * blockSize * i))
-
-    blocks.toArray
+  def toBlocks(blockSize: Int = 16): List[CryptoString] = {
+    val s = this.pad(blockSize).toString
+    val blocks = s.grouped(2 * blockSize).toList
+    blocks.map (CryptoString(_))
   }
 
   def pad(blockSize: Int = 16) = {
-    val list = bytes.toList
-    val npad = blockSize - list.length % blockSize
-    val padded = list ++ (1 to npad).map {_ => npad.toByte}
-    new CryptoString(padded.toList)
+    val npad = blockSize - bytes.size % blockSize
+    val padded  =
+      if (npad == 0)  //still need to pad if exact
+        bytes.padTo(bytes.size + blockSize, blockSize.toByte)
+      else
+        bytes ++ (1 to npad).map {_ => npad.toByte}
+
+    new CryptoString(padded)
   }
 
   private def byteToHex(b: Byte) : String = {
-    val bb = (b.toInt + 256) % 256
-    val s = bb.formatted("%h")
+    val s = (b & 0xff).formatted("%h")
     if (s.length == 1) "0" + s else s
   }
 
   override def toString = {
     val strings = bytes.map {b => byteToHex(b)}
     strings.mkString
-  }
-
-  def sha256() = {
-    new CryptoString(CryptoString.sha256.digest(buf).toList)
   }
 
   def toAscii = {

@@ -22,7 +22,6 @@ class CryptoTest extends FunSuite {
     assert(cs.toAscii === s)
   }
 
-
   test("hax to ascii conversion") {
     val s = CryptoString("616263")
     assert(s.toAscii === "abc")
@@ -44,5 +43,20 @@ class CryptoTest extends FunSuite {
     val s1 = CryptoString("112234")
     val s2 = CryptoString("012112")
     assert((s1 ^ s2) === CryptoString("100326"))
+  }
+
+  test("padding") {
+    val s = CryptoString("000102030405060708090A0B")
+    assert(s.pad() === CryptoString("000102030405060708090A0B04040404"))
+  }
+
+  test("padding with whole extra block") {
+    val s = CryptoString("000102030405060708090A0B0C0D0E0F")
+    assert(s.pad() === CryptoString("000102030405060708090A0B0C0D0E0F10101010101010101010101010101010"))
+  }
+
+  test("toBlocks") {
+    val s = CryptoString("aabbcc")
+    assert( s.toBlocks(2) === List(CryptoString("aabb"), CryptoString("cc01")))
   }
 }
