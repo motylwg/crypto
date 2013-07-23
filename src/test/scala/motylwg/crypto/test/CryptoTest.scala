@@ -59,4 +59,9 @@ class CryptoTest extends FunSuite {
     val s = CryptoString("aabbcc")
     assert( s.toBlocks(2) === List(CryptoString("aabb"), CryptoString("cc01")))
   }
+
+  test("SHA-256") {
+    val s = CryptoString.fromAscii("Squeamish Ossifrage")
+    assert(s.sha256() === CryptoString("65f5e0f55e06288f8584ffbdd81b139e9fe3caec1779b5c3013444d17bd27aed"))
+  }
 }
